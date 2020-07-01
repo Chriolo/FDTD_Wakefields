@@ -4,6 +4,7 @@ from scipy import integrate
 from scipy.signal import hilbert
 import FuncDTD
 import WKF
+import neProf
 
 #Input parameters#
 l0 = 2*np.pi #Reference length in this simulation inspired from 1D simulations
@@ -15,7 +16,7 @@ dx=l0/resx #Spatial grid length
 start=0. #Spatial grid start
 stop=210.*l0 #Spatial grid end, def 200
 tstart = 0. #Temporal grid start, def 38
-tstop = 110*t0 #Temporal grid stop, default is 38.5t0
+tstop = 40*t0 #Temporal grid stop, default is 38.5t0
 Xgrid = np.arange(start,stop,dx) #Spatial grid with resolution dx
 Tgrid = np.arange(tstart,tstop,dt) #Temporal grid with resolution dt
 
@@ -43,7 +44,7 @@ y0 = [y1_0,y2_0]
 
 #Arrays
 Eout=np.zeros([len(Tgrid),len(Xgrid)]) #List of arrays to store spatial field in all timesteps
-#Bout=np.zeros([len(Tgrid),len(Xgrid)]) 
+Bout=np.zeros([len(Tgrid),len(Xgrid)]) 
 #Pout=np.zeros([len(Tgrid),len(Xgrid)])
 
 #Create arrays with zeros for them to be filled with EM-values later#
@@ -55,13 +56,16 @@ P=np.zeros(len(Xgrid))
 #Initialize seed laser pulse, this one is forwards propagating in time!#
 PULSELENGTH = int(len(Xgrid)*0.4) #Gaussian pulse length
 PULSESTART = int(len(Xgrid)*0.3) #Gaussian pulse start in the spatial grid
-E0 = 1. #Field amplitude, chosen quite arbitrarly to represent unity
-KPRIM=0.2 #Seed frequency in SMILEI units
+E0 = 5. #Field amplitude, chosen quite arbitrarly to represent unity
+OMEGAPRIM=0.2 #Seed frequency in SMILEI units
 l_0 = 10.*t0 #Duration of temporal envelope, set to contain a few cycles
 phiS=0. #Seed phase
-FuncDTD.GaussForward(E,B,E0,PULSELENGTH,PULSESTART,KPRIM,l_0,phiS,dt,dx) #Initialization of forwards propagating laser pulse
+KPRIM=np.sqrt(OMEGAPRIM**2-ne)
+FuncDTD.GaussForward(E,B,E0,PULSELENGTH,PULSESTART,OMEGAPRIM,KPRIM,l_0,phiS,dt,dx) #Initialization of forwards propagating laser pulse
 P = -integrate.cumtrapz(B,Xgrid,initial=0.) #Initialie transverse canonical momentum
 Profile = WKF.wake_bck(parameters,y0,setting='multiple') #Add the non-linear wakefield profile
+#Profile.fill(ne)
+#Profile = neProf.boxramp(Xgrid,ne,Xgrid[PULSESTART+PULSELENGTH],60./kp,4./kp)
 
 #Probes
 NO = 12 #Number of equidistant probes
@@ -77,5 +81,7 @@ for Q in range(len(Tgrid)):
   B[len(Xgrid)-1]=0
   P = FuncDTD.Psolv(E,P,dt)
   Eout[Q] = E   #Store field values inside list
+  Bout[Q] = B   #Store field values inside list
+
   Eprob[Q] = Eout[Q][probs]
 
