@@ -55,11 +55,12 @@ P=np.zeros(len(Xgrid))
 #Initialize seed laser pulse, this one is forwards propagating in time!#
 PULSELENGTH = int(len(Xgrid)*0.4) #Gaussian pulse length
 PULSESTART = int(len(Xgrid)*0.3) #Gaussian pulse start in the spatial grid
-E0 = 1. #Field amplitude, chosen quite arbitrarly to represent unity
-KPRIM=0.2 #Seed frequency in SMILEI units
-l_0 = 10.*t0 #Duration of envelope, set to contain a few cycles
+E0 = 5. #Field amplitude, chosen quite arbitrarly to represent unity
+OMEGAPRIM=0.2 #Seed frequency in SMILEI units
+l_0 = 10.*t0 #Duration of temporal envelope, set to contain a few cycles
 phiS=0. #Seed phase
-FuncDTD.GaussForward(E,B,E0,PULSELENGTH,PULSESTART,KPRIM,l_0,phiS,dt,dx) #Initialization of forwards propagating laser pulse
+KPRIM=np.sqrt(OMEGAPRIM**2-ne)
+FuncDTD.GaussForward(E,B,E0,PULSELENGTH,PULSESTART,OMEGAPRIM,KPRIM,l_0,phiS,dt,dx) #Initialization of forwards propagating laser pulse
 P = -integrate.cumtrapz(B,Xgrid,initial=0.) #Initialie transverse canonical momentum
 Profile = WKF.wake_bck(parameters,y0,setting='multiple') #Add the non-linear wakefield profile
 

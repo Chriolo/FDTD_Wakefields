@@ -12,7 +12,7 @@ def Psolv(E,P,dt):
   P = P-dt*E #Update value of transverse current density
   return P
 
-def GaussForward(E,B,E0,PULSELENGTH,PULSESTART,KPRIM,l_0,phiS,dt,dx):
+def GaussForward(E,B,E0,PULSELENGTH,PULSESTART,OMEGAPRIM, KPRIM,l_0,phiS,dt,dx):
  El = np.zeros(PULSELENGTH)
  Bl = np.zeros(PULSELENGTH)
  START = -PULSELENGTH/2  
@@ -20,7 +20,7 @@ def GaussForward(E,B,E0,PULSELENGTH,PULSESTART,KPRIM,l_0,phiS,dt,dx):
  xEl = dx*np.arange(START,STOPP,1)
  xBl = dx*np.arange(START,STOPP,1)+(dx-dt)/2
  for i in range(len(El)):
-  El[i] = E0*(np.sin(KPRIM*xEl[i]+phiS)*np.exp(-(xEl[i]**2/(2*l_0**2))))
-  Bl[i] = -E0*(np.sin(KPRIM*xBl[i]+phiS)*np.exp(-(xBl[i]**2/(2*l_0**2))))
+  El[i] = -OMEGAPRIM*E0*(np.sin(KPRIM*xEl[i]+phiS)*np.exp(-(xEl[i]**2/(2*l_0**2)))) + (KPRIM/OMEGAPRIM)*E0*(np.cos(KPRIM*xEl[i]+phiS)*np.exp(-(xEl[i]**2/(2*l_0**2))))*(-2*xEl[i]/(2*l_0**2))
+  Bl[i] = KPRIM*E0*(np.sin(KPRIM*xBl[i]+phiS)*np.exp(-(xBl[i]**2/(2*l_0**2)))) - E0*(np.cos(KPRIM*xEl[i]+phiS)*np.exp(-(xEl[i]**2/(2*l_0**2))))*(-2*xEl[i]/(2*l_0**2))
  E[PULSESTART:PULSESTART+PULSELENGTH] = El
  B[PULSESTART:PULSESTART+PULSELENGTH] = Bl
