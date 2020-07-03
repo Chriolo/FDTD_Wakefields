@@ -3,6 +3,9 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 from my_plot import set_size
 from scipy.stats import linregress
+from scipy.signal import find_peaks
+
+plt.ion()
 
 #Settings#####################
 nice_fonts = {
@@ -41,7 +44,6 @@ plt.show()
 
 
 #Safecheck probe amplitude data from new placement#
-from scipy.signal import find_peaks
 
 for q in range(len(probs)):
  pks,locs = find_peaks(np.abs(hilbert(Eprob[:,q])),height=1.) #Find peaks and locations
@@ -75,7 +77,6 @@ plt.show()
 
 
 #Safecheck probe data + corresponding filter#
-from scipy.signal import find_peaks
 pwr = lambda(arr): np.abs(np.fft.rfft(arr))**2 #Power spectrum function
 C = lambda t,tc,w: np.exp(-((t-tc)**10)/(w**10)) #Super-Gaussian filter function
 w=20. #Width of filter, quite arbitrary but a value around 20 will capture a pulse
@@ -144,8 +145,12 @@ STEP = len(Tgrid)/NO #Number of steps to not sample too many energy data points
 Egain = np.zeros(len(range(0,len(Tgrid),STEP))) #Array to store electromagnetic field values
 counter=0 #Just a hardcoded counter
 for q in range(0,len(Tgrid),STEP):
- Egain[counter] = 0.5*np.trapz(Eout[q]**2+Bout[q]**2,Xgrid) #Compute the electromagnetic energy
- counter+=1
+	plt.figure()
+	plt.plot(Xgrid, Eout[q])
+	ax1=plt.twinx()
+	plt.plot(Xgrid, np.interp(Xgrid-vphi*Tgrid[q]-push,ksigrid,Profile),'r')
+	Egain[counter] = 0.5*np.trapz(Eout[q]**2+Bout[q]**2,Xgrid) #Compute the electromagnetic energy
+	counter+=1 
 fig, ax = plt.subplots(1,1)
 ax.set_ylabel('Field energy')
 ax.set_xlabel('$\omega_d t$')
@@ -178,9 +183,11 @@ from scipy.signal import find_peaks
 pwr = lambda(arr): np.abs(np.fft.rfft(arr))**2
 C = lambda t,tc,w: np.exp(-((t-tc)**10)/(w**10))
 w=20.
+lambdad=1. # pump wavelength
+omegaS=0.2 # seed ang. frequency
 
 RemovePts = 3
-RemoveStart = 6 #How many points to remove from the start
+RemoveStart = 0 #How many points to remove from the start
 omeg = np.zeros(len(probs)-RemovePts)
 for q in range(len(probs)-RemovePts):
  data=np.abs(hilbert(Eprob[:,q]))
@@ -192,9 +199,9 @@ for q in range(len(probs)-RemovePts):
  omeg[q] = freq[np.where(signal == np.amax(signal))[0][0]]
  #print(data[pks[0]])
 
-ax.set_xlabel('$x/\lambda_d$')
+ax.set_xlabel('$x (\mu m)$')
 ax.set_ylabel('$\omega/\omega_s, \ max(E)/E^0_s, \ U/U^0_s$')
-ax.plot(Xgrid[probs[RemoveStart:(len(probs)-RemovePts)]]/(2*np.pi),omeg[RemoveStart:]/0.2,'g.',label='$\omega/\omega_s$')
+ax.plot(lambdad*(Xgrid[probs[RemoveStart:(len(probs)-RemovePts)]]-Xgrid[probs[RemoveStart]])/(2*np.pi),omeg[RemoveStart:]/omegaS,'g.',label='$\omega/\omega_s$')
 
 mag = np.zeros(len(probs)-RemovePts)
 
@@ -204,7 +211,7 @@ for q in range(len(probs)-RemovePts):
  mag[q] = data[pks[0]]
  #print(data[pks[0]])
 
-ax.plot(Xgrid[probs[RemoveStart:(len(probs)-RemovePts)]]/(2*np.pi),mag[RemoveStart:],'r.',label='$max(E)/E^0_s$')
+ax.plot(lambdad*(Xgrid[probs[RemoveStart:(len(probs)-RemovePts)]]-Xgrid[probs[RemoveStart]])/(2*np.pi),mag[RemoveStart:],'r.',label='$max(E)/E^0_s$')
 
 STEP = len(Tgrid)/NO
 RemovePtsEnergy = RemovePts+1
@@ -214,7 +221,7 @@ Xspace = np.array((Xgrid[PULSESTART+PULSELENGTH/2]+vphi*Tgrid)/(2*np.pi))[range(
 for q in range(0,len(Tgrid),STEP):
  Egain[counter] = 0.5*np.trapz(Eout[q]**2+Bout[q]**2,Xgrid)
  counter+=1
-ax.plot(Xspace[RemoveStart:len(Xspace)-RemovePtsEnergy],Egain[RemoveStart:len(Egain)-RemovePtsEnergy]/Egain[0],'b.',label='$U/U^0_s$')
+ax.plot(lambdad*(Xspace[RemoveStart:len(Xspace)-RemovePtsEnergy]-Xspace[RemoveStart]),Egain[RemoveStart:len(Egain)-RemovePtsEnergy]/Egain[0],'b.',label='$U/U^0_s$')
 ax.legend(loc='lower right')
 plt.show()
 
