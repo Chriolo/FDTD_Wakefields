@@ -9,8 +9,8 @@ A = lambda KSI,kd,a0,ksi0,phiD : a0*np.exp(-(KSI)**2 / ksi0**2)*np.sin(kd*KSI+ph
 def phi(y,ksi,parameters):
   y1,y2 = y
   ne,vb,gamme,kd,ksigrid,kp,a0,ksi0,phiD,push = parameters
-  derivatives = [y2, ((kp**2)*gamme**2)*(vb*((1.-(1.+A(ksi,kd,a0,ksi0,phiD)**2)/(gamme*(1.+y1))**2))**(-1./2) -1.)]
-  #derivatives = [y2, (kp**2)*0.5*((1.+A(ksi,kd,a0,ksi0,phiD)**2)/(1+y1)**2-1.)]
+  #derivatives = [y2, ((kp**2)*gamme**2)*(vb*((1.-(1.+A(ksi,kd,a0,ksi0,phiD)**2)/(gamme*(1.+y1))**2))**(-1./2) -1.)]
+  derivatives = [y2, (kp**2)*0.5*((1.+A(ksi,kd,a0,ksi0,phiD)**2)/(1+y1)**2-1.)]
 
   return derivatives
 
